@@ -16,14 +16,14 @@ an earlier lab manipulator by adding the CAN bus link and mobile remote control.
 
 ## Features
 
-- 6-DOF arm driven by 3 DC gear-motors, a stepper, and 2 servos with a gripper end-effector
-- Modbus RTU slave on the Arduino Mega, supervised by a Citect SCADA master over RS-485
-- CAN bus node-to-node link (Arduino Uno + dual MCP2515)
-- Remote control over Bluetooth (HC-05) from the Dabble mobile app
-- Manual and Auto operating modes: jog/teach the joints, or run to target angles
-- Closed-loop feedback from optical encoders, plus piezo vibration sensing on the arm body
-- Hardware diode limit circuit that caps joint travel independently of the software
-- Auto-homing to the zero position on power-up using micro-switches and encoders
+- A robotic arm with 6 moving joints and a gripper hand to pick things up
+- Runs on an Arduino that talks to PC software (Citect SCADA) using the Modbus industrial protocol
+- A second Arduino connects over the CAN bus, another common industrial protocol
+- Can also be controlled from a phone over Bluetooth
+- Two ways to run it: move each joint by hand with buttons, or give it a target and let it go there on its own
+- Sensors track each joint's angle and detect shaking, so it moves smoothly and accurately
+- A safety circuit physically stops the arm from going too far, even if the software fails
+- Finds its own starting position every time it powers on
 
 ## System Architecture
 
