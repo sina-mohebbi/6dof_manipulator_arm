@@ -1,0 +1,14 @@
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+*~
+~$*
+
+# Arduino build output
+/build/
+*.hex
+*.elf
+
+# Report PDFs
+*.pdf
