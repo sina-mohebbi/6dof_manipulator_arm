@@ -14,12 +14,6 @@ This is my B.Sc. project at the School of Electrical & Computer Engineering, Uni
 Tehran (2023), done in the Industrial Automation & Intelligent Processing Lab. It extends
 an earlier lab manipulator by adding the CAN bus link and mobile remote control.
 
-<p align="center">
-  <img src="docs/images/gripper-servo.jpg" alt="Servo-driven gripper end-effector, with the 6-DOF arm in the background" width="420">
-  <br>
-  <em>The servo-actuated gripper (labeled “SERVO2”), with the manipulator arm behind it.</em>
-</p>
-
 ## Features
 
 - 6-DOF arm driven by 3 DC gear-motors, a stepper, and 2 servos with a gripper end-effector
@@ -148,13 +142,7 @@ angles read back over Modbus (`Angle1`–`Angle3` and the stepper position).
 | HC-05 | Bluetooth link for mobile remote control |
 
 The end-effector is an aluminum parallel-jaw gripper actuated by a servo (the two `servo`
-channels are driven from the Mega):
-
-<p align="center">
-  <img src="docs/images/gripper-servo-2.jpg" alt="Close-up of the gripper servo wiring into the terminal block" width="360">
-  <br>
-  <em>Gripper servo wiring into the arm's terminal block.</em>
-</p>
+channels are driven from the Mega).
 
 ## Bill of Materials
 
