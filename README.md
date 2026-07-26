@@ -25,22 +25,6 @@ an earlier lab manipulator by adding the CAN bus link and mobile remote control.
 - Hardware diode limit circuit that caps joint travel independently of the software
 - Auto-homing to the zero position on power-up using micro-switches and encoders
 
-## Table of Contents
-- [System Architecture](#system-architecture)
-- [Control Modes](#control-modes)
-- [Kinematics](#kinematics)
-- [Hardware](#hardware)
-- [Bill of Materials](#bill-of-materials)
-- [Communication Protocols](#communication-protocols)
-- [Pin Mapping](#pin-mapping-arduino-mega)
-- [Modbus Register Map](#modbus-register-map)
-- [Control Flow & Data Path](#control-flow--data-path)
-- [SCADA HMI](#scada-hmi)
-- [Wiring](#wiring)
-- [Repository Layout](#repository-layout)
-- [Building & Flashing](#building--flashing)
-- [License](#license)
-
 ## System Architecture
 
 The Citect SCADA PC and the mobile app sit at the top. The Arduino Mega runs the
@@ -49,29 +33,6 @@ the encoders and piezo vibration sensors. A second Arduino Uno links in over CAN
 MCP2515 transceivers, and an HC-05 module adds the Bluetooth remote link.
 
 ![System architecture](docs/images/architecture.png)
-
-```mermaid
-flowchart TB
-    subgraph Supervisory["Supervisory layer"]
-        SCADA["Citect SCADA<br/>(PC master)"]
-        APP["Dabble App<br/>(mobile)"]
-    end
-    subgraph Field["Field / control layer"]
-        MEGA["Arduino Mega 2560<br/>Modbus slave"]
-        UNO["Arduino Uno<br/>CAN node"]
-    end
-    subgraph Actuators["Actuators & sensors"]
-        L298["L298N driver"]
-        MOTORS["3× DC motors · stepper · 2× servos · gripper"]
-        SENS["Encoders · piezo vibration · micro-switches"]
-    end
-
-    SCADA <-->|Modbus RTU / RS-485| MEGA
-    APP <-->|Bluetooth| HC05["HC-05"] <--> UNO
-    UNO <-->|CAN bus / MCP2515| MEGA
-    MEGA --> L298 --> MOTORS
-    SENS --> MEGA
-```
 
 ## Control Modes
 
@@ -127,58 +88,33 @@ angles read back over Modbus (`Angle1`–`Angle3` and the stepper position).
 
 ## Hardware
 
-| Component | Role |
-|-----------|------|
-| Arduino Mega 2560 | Main controller / Modbus slave, motor & sensor I/O |
-| Arduino Uno | Secondary node on the CAN bus |
-| L298N V3 | Dual H-bridge driver for the DC motors |
-| 3× DC gear-motors | Main / joint-2 / joint-3 rotation (with encoders) |
-| Stepper motor | Linear / gripper axis |
-| 2× Servo motors | Gripper & wrist |
-| Optical encoders | Joint angle feedback (slotted-disk + photo-sensor) |
-| Piezo vibration sensors | Detect sudden motion / vibration on the arm body |
-| Micro-switches | Homing / end-stop limits |
-| MCP2515 (×2) | SPI-to-CAN transceivers |
-| HC-05 | Bluetooth link for mobile remote control |
-
-The end-effector is an aluminum parallel-jaw gripper actuated by a servo (the two `servo`
-channels are driven from the Mega).
-
-## Bill of Materials
-
-| Qty | Part | Notes |
-|----:|------|-------|
-| 1 | Arduino Mega 2560 | Main controller / Modbus slave |
-| 1 | Arduino Uno | CAN node |
-| 1 | L298N V3 dual H-bridge | DC motor driver |
-| 3 | DC gear-motor + optical encoder | Joints 1–3 |
+| Qty | Component | Role |
+|----:|-----------|------|
+| 1 | Arduino Mega 2560 | Main controller / Modbus slave, motor & sensor I/O |
+| 1 | Arduino Uno | Secondary node on the CAN bus |
+| 1 | L298N V3 | Dual H-bridge driver for the DC motors |
+| 3 | DC gear-motors (with optical encoders) | Main / joint-2 / joint-3 rotation, angle feedback |
 | 1 | Stepper motor (5-wire) | Linear / gripper axis |
-| 2 | Servo motor | Gripper & wrist |
-| 3 | Piezo vibration sensor | Arm-body vibration sensing |
-| 4+ | Micro-switch | Homing / end-stops |
-| 2 | MCP2515 CAN module | SPI ↔ CAN transceiver |
-| 1 | HC-05 Bluetooth module | Mobile remote link |
+| 2 | Servo motors | Gripper & wrist |
+| 3 | Piezo vibration sensors | Vibration sensing on the arm body |
+| 4+ | Micro-switches | Homing / end-stop limits |
+| 2 | MCP2515 CAN module | SPI-to-CAN transceiver |
+| 1 | HC-05 | Bluetooth link for mobile remote control |
 | 1 | RS-485 transceiver (MAX485 / shield) | Modbus physical layer |
-| — | Terminals, diodes (safety circuit), wiring | See wiring diagrams |
+
+Plus terminals, the diode safety circuit, and wiring (see the wiring diagrams below). The
+end-effector is an aluminum parallel-jaw gripper actuated by a servo.
 
 ## Communication Protocols
 
 - **Modbus RTU** over RS-485 links the Arduino slave and the Citect SCADA master
   (9600 baud, slave ID 1). Uses function 3 (read holding registers) and function 16
   (write multiple registers).
-- **CAN bus** links the two Arduino nodes via MCP2515.
+- **CAN bus** links the two Arduino nodes via MCP2515 (up to 1 Mbit/s).
 - **TTL / Serial** and **Bluetooth (HC-05)** provide mobile remote control through the
   Dabble app.
 - The wider lab automation line also uses AS-i and Profibus with a PLC (background from the
   thesis; not part of this repo).
-
-| Protocol | Role in this system | Medium | Typical speed | Topology |
-|----------|---------------------|--------|---------------|----------|
-| **Modbus RTU** | SCADA master ↔ Arduino slave | RS-485 serial | 9600 baud (configured) | Multi-drop, master/slave |
-| **CAN** | Arduino ↔ Arduino node link | Differential pair (MCP2515) | up to 1 Mbit/s | Multi-master bus |
-| **Bluetooth (HC-05)** | Mobile app ↔ Arduino | 2.4 GHz / TTL UART | 9600–115200 baud | Point-to-point |
-| AS-i | Line-level sensors/actuators (lab line) | 2-wire | ~167 kbit/s | Bus |
-| Profibus | PLC network (lab line) | RS-485 / fiber | up to 12 Mbit/s | Bus |
 
 ## Pin Mapping (Arduino Mega)
 
@@ -223,10 +159,7 @@ status/position registers are read back.
 | 11 | `Position4` | read | Gripper position |
 | 12 | `StepperMotor_Pos` | read | Stepper position |
 | 13 | `Man_Auto` | write | 0 = manual, 1 = auto |
-| 14 | `Main_Motor_Status` | read | Run = 1 / Stop = 0 |
-| 15 | `Motor2_Status` | read | Run = 1 / Stop = 0 |
-| 16 | `Motor3_Status` | read | Run = 1 / Stop = 0 |
-| 17 | `StepperMotor_Status` | read | Run = 1 / Stop = 0 |
+| 14–17 | `*_Status` | read | Per-motor run (1) / stop (0) flags |
 | 18 | `Loc_Rem` | write | 0 = local, 1 = remote |
 | 19 | `servo1_CMD` | write | Servo command |
 | 20 | `TOTAL_ERRORS` | read | Modbus error counter since start |
